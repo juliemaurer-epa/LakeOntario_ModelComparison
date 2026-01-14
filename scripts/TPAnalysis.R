@@ -36,6 +36,7 @@ ggsave("../plots/TPData_2panel.png", width = 10, height = 10)
 #### linear regression plots ####
 colorvar1 <- c("#E69F00", "#56B4E9", "#009E73")
 
+#default to natural log (log10 = base 10)
 df2 <- df %>%
   mutate(log_TP = log(Real_TP),
          log_FVCOM1 = log(FVCOM_scen1),

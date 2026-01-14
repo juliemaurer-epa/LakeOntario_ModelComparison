@@ -73,7 +73,7 @@ obsdata_sub <- obsdata_clean %>% distinct(date_time, lon, lat, K_Index, TP_ugL.1
 
 # many samples still have missing information
 
-write.csv(obsdata_sub, "TP_observationaldata_combined_redo.csv")
+write.csv(obsdata_sub, "TP_observationaldata_combined.csv")
 
 saveRDS(obsdata_clean, "obsdata_clean.RData")
 saveRDS(obsdata_sub, "obsdata_subset.RData")
@@ -125,12 +125,11 @@ obsdata_sub <- obsdata_sub %>%
   tidyr::fill(water_depth, .direction = "down")
 
 saveRDS(obsdata_sub, "obsdata_subset.RData")
-write.csv(obsdata_sub, "TP_observationaldata_combined_redo.csv")
+write.csv(obsdata_sub, "TP_observationaldata_combined_v2.csv")
 
 #### adding fvcom nodes ####
 
 fvcom.grid <- read.csv("FVCOM_nodes_2018inits.csv", header = TRUE)
-obsdata_sub <- read.csv("TP_observationaldata_combined_redo.csv", header = TRUE)
 
 #source: https://stackoverflow.com/questions/57525670/find-closest-points-lat-lon-from-one-data-set-to-a-second-data-set
 
@@ -178,22 +177,34 @@ obsdata_sub2$sigma <- replace(obsdata_sub2$sigma, obsdata_sub2$sigma < 1, 1)
 obsdata_sub3 <- obsdata_sub2 %>% 
   distinct(date_time, lon, lat, node_EFDC, I_Index, J_Index, K_Index, 
            sample_depth, node_fvcom, .keep_all = TRUE) %>% #removed duplicates 
-  select(date_time, Year, Longitude, Latitude, Agency, Program, station_id, node_fvcom, nLayers_fvcom, sigthick_fvcom, 
-         sigma, node_EFDC, nLayers_efdc, sigthick_efdc, I_Index, J_Index, K_Index, sample_depth, water_depth, TP_ugL.1, Model_source)
+  dplyr::select(date_time, Year, Longitude, Latitude, Agency, Program, 
+                station_id, node_fvcom, nLayers_fvcom, sigthick_fvcom, 
+                sigma, node_EFDC, nLayers_efdc, sigthick_efdc, I_Index, 
+                J_Index, K_Index, sample_depth, water_depth, TP_ugL.1, Model_source)
 
-write.csv(obsdata_sub3, "../TPData_processing/TP_observationaldata_combined_efdc-fvcom.csv")
-saveRDS(obsdata_sub3, "../TPData_processing/obsdata_combined_efdc-fvcom.RData")
+write.csv(obsdata_sub3, "../TPData_processing/TP_observationaldata_combined_v3.csv")
+saveRDS(obsdata_sub3, "../TPData_processing/obsdata_combined_v3.RData")
 
-# missing water depths remain - fill in manually in arcGIS
-obsdata_sub4 <- read.csv("../TPData_processing/TP_observationaldata_combined_efdc-fvcom.csv") 
+# missing water depths remain - filled in manually in arcGIS and removed Hamilton Harbor points outside of R
+obsdata_sub4 <- read.csv("../TPData_processing/TP_observationaldata_combined_v3.csv") 
 
-# remove Hamilton Harbor points
-# I = 15 -> 9
-obsdata_sub5 <- obsdata_sub4[obsdata_sub4$I_Index > 15,]
-obsdata_sub5$date_time <- as.Date(obsdata_sub5$date_time, "%m/%d/%Y")
+# repopulate missing sigma layers and layer thicknesses
+summary(is.na(obsdata_sub4))
 
-write.csv(obsdata_sub5, "../TPData_processing/TP_observationaldata_combined_noHH_efdc-fvcom.csv")
-saveRDS(obsdata_sub5,  "../TPData_processing/obsdata_combined_efdc-fvcom_final.RData")
+obsdata_sub4$sigthick_fvcom <- obsdata_sub4$water_depth/20
+
+obsdata_sub24sigma <- floor(obsdata_sub4$sample_depth / obsdata_sub4$sigthick_fvcom)
+
+obsdata_sub4$sigma <- as.integer(obsdata_sub4$sigma)
+
+obsdata_sub4$sigthick_efdc <- obsdata_sub4$water_depth/obsdata_sub4$nLayers_efdc
+
+# Replace 0 -> 1 and >20 -> 20 
+obsdata_sub4$sigma <- replace(obsdata_sub4$sigma, obsdata_sub4$sigma > 20, 20)
+obsdata_sub4$sigma <- replace(obsdata_sub4$sigma, obsdata_sub4$sigma < 1, 1)
+
+write.csv(obsdata_sub4, "../TPData_processing/TP_observationaldata_combined_noHH_efdc-fvcom.csv")
+saveRDS(obsdata_sub4,  "../TPData_processing/obsdata_combined_efdc-fvcom_final.RData")
 
 
 
