@@ -173,23 +173,23 @@ ggsave("../plots/MvM_6panel.png", width = 10, height = 8)
 
 #### residual plots ####
 # residuals = mod val - obs val
-df.res <- df %>%
-  mutate(res_fvcom1 = FVCOM_scen1 - Real_TP,
-         res_efdc1 = EFDC_scen1 - Real_TP,
-         res_loem1 = LOEM_scen1 - Real_TP,
-         res_fvcom2 = FVCOM_scen2 - Real_TP,
-         res_efdc2 = EFDC_scen2 - Real_TP,
-         res_loem2 = LOEM_scen2 - Real_TP,
-         res_efdc3 = EFDC_scen3 - Real_TP,
-         res_loem3 = LOEM_scen3 - Real_TP)
+df.res <- df2 %>%
+  mutate(log_res_fvcom1 = log_FVCOM1 - log_TP,
+         log_res_efdc1 = log_EFDC1 - log_TP,
+         log_res_loem1 = log_LOEM1 - log_TP,
+         log_res_fvcom2 = log_FVCOM2 - log_TP,
+         log_res_efdc2 = log_EFDC2 - log_TP,
+         log_res_loem2 = log_LOEM2 - log_TP,
+         log_res_efdc3 = log_EFDC3 - log_TP,
+         log_res_loem3 = log_LOEM3 - log_TP)
 
 # trying plot - easier to interpret (above 0 is overestimate, under zero is underestimate)
 colorvar1 <- c("#E69F00", "#56B4E9", "#009E73")
 
-ggplot(df.res, aes(x = log(Real_TP), y = log(res_fvcom1), color = depth_interval)) + theme_classic() +
+ggplot(df.res, aes(x = log_TP, y = log_res_fvcom1, color = depth_interval)) + theme_classic() +
   geom_point() + geom_abline(intercept = 0, slope = 0, color = "black", linewidth = 0.75, linetype = "solid") +
   scale_color_manual(values = colorvar1) + scale_x_continuous(limits = c(0,6)) + scale_y_continuous(limits = c(-6,6)) +
-  labs(x = "log(Measured TP)", y = "log(Residuals) (Modeled - Measured)", title = "FVCOM Scenario 1", color = "Depth Interval") +
+  labs(x = "log(Measured TP)", y = "log(Modeled) - log(Measured)", title = "FVCOM Scenario 1", color = "Depth Interval") +
   theme(axis.text = element_text(size = 12, color = "black"),
         axis.title = element_text(size = 14, color = "black"),
         legend.text = element_text(size = 12, color = "black"),
@@ -198,31 +198,33 @@ ggplot(df.res, aes(x = log(Real_TP), y = log(res_fvcom1), color = depth_interval
 
 # trying facetting 
 df.res2 <- df.res %>% 
-  select(-c(FVCOM_scen1, EFDC_scen1, LOEM_scen1, FVCOM_scen2, EFDC_scen2, 
-            LOEM_scen2, EFDC_scen3, LOEM_scen3)) %>%
-  pivot_longer(cols = -c(1:14),
+  dplyr::select(date_time, Longitude, Latitude, node_fvcom, sigma, node_EFDC, I_Index,
+                J_Index, K_Index, sample_depth, water_depth, depth_interval, log_TP,
+                log_res_fvcom1, log_res_efdc1, log_res_loem1, log_res_fvcom2, 
+                log_res_efdc2, log_res_loem2, log_res_efdc3, log_res_loem3) %>%
+  pivot_longer(cols = -c(1:13),
                names_to = "Model",
-               values_to = "residuals") %>%
-  mutate(Model = factor(Model, levels = c("res_efdc1", "res_loem1", "res_fvcom1", 
-                                          "res_efdc2", "res_loem2", "res_fvcom2",
-                                          "res_efdc3", "res_loem3")))
+               values_to = "log_residuals") %>%
+  mutate(Model = factor(Model, levels = c("log_res_efdc1", "log_res_loem1", "log_res_fvcom1", 
+                                          "log_res_efdc2", "log_res_loem2", "log_res_fvcom2",
+                                          "log_res_efdc3", "log_res_loem3")))
 
 #labeling facet grid
 model_names <- c(
-                 "res_efdc1" = "EFDC-LOTPM Scenario1",
-                 "res_loem1" = "LOEM Scenario1",
-                 "res_fvcom1" = "FVCOM-LOTPM Scenario1",
-                 "res_efdc2" = "EFDC-LOTPM Scenario2",
-                 "res_loem2" = "LOEM Scenario2",
-                 "res_fvcom2" = "FVCOM-LOTPM Scenario2",
-                 "res_efdc3" = "EFDC-LOTMP Scenario3",
-                 "res_loem3" = "LOEM Scenario3")
+                 "log_res_efdc1" = "EFDC-LOTPM Scenario 1",
+                 "log_res_loem1" = "LOEM Scenario 1",
+                 "log_res_fvcom1" = "FVCOM-LOTPM Scenario 1",
+                 "log_res_efdc2" = "EFDC-LOTPM Scenario 2",
+                 "log_res_loem2" = "LOEM Scenario 2",
+                 "log_res_fvcom2" = "FVCOM-LOTPM Scenario 2",
+                 "log_res_efdc3" = "EFDC-LOTMP Scenario 3",
+                 "log_res_loem3" = "LOEM Scenario 3")
 
-ggplot(df.res2, aes(x = log(Real_TP), y = log(residuals), color = depth_interval)) + 
+ggplot(df.res2, aes(x = log_TP, y = log_residuals, color = depth_interval)) + 
   geom_point() + theme_classic() + facet_wrap(~Model, scales = "free_x", labeller = labeller(Model = model_names)) + 
   geom_abline(intercept = 0, slope = 0, color = "black", linewidth = 0.75, linetype = "solid") +
   scale_color_manual(values = colorvar1) + scale_x_continuous(limits = c(0,5)) + scale_y_continuous(limits = c(-6,5)) +
-  labs(x = "log(Measured TP)", y = "log(Modeled - Measured)", color = "Depth Interval") +
+  labs(x = "log(Measured TP)", y = "log(Modeled) - log(Measured)", color = "Depth Interval") +
   theme(axis.text = element_text(size = 12, color = "black"),
         axis.title = element_text(size = 14, color = "black"),
         legend.text = element_text(size = 12, color = "black"),
@@ -252,40 +254,6 @@ dfl2 <- df %>%
                                           "LOEM 1", "FVCOM-LOTPM 2", "EFDC-LOTPM 2",
                                           "LOEM 2", "EFDC-LOPTM 3", "LOEM 3")))
 
-colorvar2 <- c("#999999", #tp
-              "#CC79A7", #fvcom1 
-              "#F0E442", #efdc1 
-              "#E69F00", #loem1
-              "#009E73", #fvcom2 
-              "#56B4E9", #efdc2
-              "#0072B2", #loem2 
-              "#6600CC", #efdc3
-              "#330066") #loem3
-
-pf <- ggplot(data = dfl2, aes(x = depth_interval, y = TP, fill = Model)) +
-  geom_boxplot(position = "dodge", outliers = FALSE) + theme_classic() +
-  scale_fill_manual(values = colorvar2) +
-  labs(x = "Depth Intervals", y = "Total Phosphorus (µg L-1)", fill = "") + 
-  theme(axis.text = element_text(size = 12, color = "black"),
-        axis.title = element_text(size = 14, color = "black"),
-        legend.text = element_text(size = 12, color = "black"),
-        legend.title = element_text(size = 14, color = "black"),
-        title = element_text(size = 12, color = "black"),
-        legend.position = "bottom")
-pf
-ggsave(plot = pf, filename = "../plots/MvM_TP_boxplot.png", width = 10, height = 8)
-
-# flipped
-ggplot(data = dfl2, aes(x = TP, y = depth_interval, fill = Model)) + 
-  geom_boxplot(position = "dodge", outliers = FALSE) + theme_classic() +
-  scale_fill_manual(values = colorvar2) +
-  labs(x = "Total Phosphorus (µg L-1)", y = "Depth Interval", fill = "") + 
-  theme(axis.text = element_text(size = 12, color = "black"),
-        axis.title = element_text(size = 14, color = "black"),
-        legend.text = element_text(size = 12, color = "black"),
-        legend.title = element_text(size = 14, color = "black"),
-        title = element_text(size = 12, color = "black"),
-        legend.position = "bottom")
 
 # trying model vs TP, colored by depth interval
 colorvar1 <- c("#E69F00", "#56B4E9", "#009E73")
@@ -294,7 +262,6 @@ ggplot(data = dfl2, aes(x = TP, y = Model, fill = depth_interval)) +
   geom_boxplot(position = "dodge", outliers = FALSE) + theme_classic() +
   scale_fill_manual(values = colorvar1) + 
   labs(x = "Total Phosphorus (µg L-1)", y = "", fill = "Depth Interval") +
-  labs(x = "Total Phosphorus (µg L-1)", y = "Depth Interval", fill = "") + 
   theme(axis.text = element_text(size = 12, color = "black"),
         axis.title = element_text(size = 14, color = "black"),
         legend.text = element_text(size = 12, color = "black"),
