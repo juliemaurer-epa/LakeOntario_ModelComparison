@@ -10,8 +10,8 @@ library(dplyr)
 library(ggplot2)
 
 # functions
-source("../scripts/nodematchFVCOM.R")
-source("../scripts/cellmatchEFDC.R")
+source("../scripts/model2data/nodematchFVCOM.R")
+source("../scripts/model2data/cellmatchEFDC.R")
 
 ########################## LOAD OBSERVATIONAL DATA ###############################
 # TP data with Hamilton Harbor points removed

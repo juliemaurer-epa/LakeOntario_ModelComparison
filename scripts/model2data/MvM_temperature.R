@@ -10,8 +10,8 @@ library(lubridate)
 library(ncdf4)
 library(dplyr) 
 library(ggplot2)
-source("../scripts/nodematchFVCOM.R")
-source("../scripts/cellmatchEFDC.R")
+source("../scripts/model2data/nodematchFVCOM.R")
+source("../scripts/model2data/cellmatchEFDC.R")
 
 # change the following for different scenarios/models/parameters
 output_folder <- "Statistics/temp/"

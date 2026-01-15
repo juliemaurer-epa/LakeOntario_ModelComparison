@@ -10,8 +10,8 @@ library(Metrics)
 setwd("/work/GLHABS/GreatLakesEco/LakeOntario/ModelComparison")
 output_folder <- "Statistics/temp/"
 
-source("../scripts/nodematchFVCOM.R")
-source("../scripts/skillstat_FUN.R")
+source("../scripts/model2data/nodematchFVCOM.R")
+source("../scripts/model2data/skillstat_FUN.R")
 
 ########################### DO NOT RUN INTERACTIVELY ############################
 ## Model output

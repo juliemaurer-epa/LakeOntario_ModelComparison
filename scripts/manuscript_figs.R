@@ -13,7 +13,7 @@ df.tp <- read.csv("MvM_TP_combined.csv", header = TRUE) %>%
   mutate(date_time = as.Date(date_time, format = "%Y-%m-%d"),
          depth_interval = factor(depth_interval, levels = c("<5m", "5-30m", ">30m")))
 
-df.temp <- readRDS("../../TPData_processing/Temp_data_combined.RData") %>%
+df.temp <- read.csv("../../TPData_processing/Temp_observationaldata_combined_loem-fvcom.csv") %>%
   mutate(date_time = as.POSIXct(date_time, format = "%m/%d/%Y")) %>%
   dplyr::select(-c(X, X.1)) 
 
@@ -44,8 +44,8 @@ fig3
 ##### figure 4 - surface temp timeseries #####
 
 #### panel A - volume weighted surface temp
-df1 <- read.csv("EFDC_VolWeighted_Temp.csv")
-df2 <- read.csv("FVCOM_VolWeighted_Temp.csv")
+df1 <- read.csv("temp/EFDC_VolWeighted_Temp.csv")
+df2 <- read.csv("temp/FVCOM_VolWeighted_Temp.csv")
 
 colvar <- c("#56B4E9", "#E69F00") #EFDC = blue, FVCOM = orange
 
@@ -944,7 +944,7 @@ df.tp.l <- df.tp %>%
 
 colorvar1 <- c("#E69F00", "#56B4E9", "#009E73")
 
-p5A <- ggplot(data = df.tp.l, aes(x = TP, y = Model, fill = depth_interval)) + 
+p6A <- ggplot(data = df.tp.l, aes(x = TP, y = Model, fill = depth_interval)) + 
   geom_boxplot(position = "dodge", outliers = FALSE) + theme_classic() +
   scale_fill_manual(values = colorvar1) + 
   labs(x = "Total Phosphorus (µg L-1)", y = "", fill = "Depth Interval") +
@@ -954,7 +954,7 @@ p5A <- ggplot(data = df.tp.l, aes(x = TP, y = Model, fill = depth_interval)) +
         legend.title = element_text(size = 14, color = "black"),
         title = element_text(size = 12, color = "black"),
         legend.position = "bottom")
-p5A
+p6A
 
 p5A.gray <- ggplot(data = df.tp.l, aes(x = TP, y = Model, fill = depth_interval)) + 
   geom_boxplot(position = "dodge", outliers = FALSE) + theme_classic() +
@@ -970,15 +970,24 @@ p5A.gray <- ggplot(data = df.tp.l, aes(x = TP, y = Model, fill = depth_interval)
 p5A.gray
 
 #panel B - residuals
-df.res <- df2 %>%
-  mutate(log_res_fvcom1 = log_FVCOM1 - log_TP,
-         log_res_efdc1 = log_EFDC1 - log_TP,
-         log_res_loem1 = log_LOEM1 - log_TP,
-         log_res_fvcom2 = log_FVCOM2 - log_TP,
-         log_res_efdc2 = log_EFDC2 - log_TP,
-         log_res_loem2 = log_LOEM2 - log_TP,
-         log_res_efdc3 = log_EFDC3 - log_TP,
-         log_res_loem3 = log_LOEM3 - log_TP) %>% 
+df.res <- df.tp %>%
+  mutate(log_TP = log(Real_TP),
+         log_fvcom1 = log(FVCOM_scen1),
+         log_efdc1 = log(EFDC_scen1),
+         log_loem1 = log(LOEM_scen1),
+         log_fvcom2 = log(FVCOM_scen2),
+         log_efdc2 = log(EFDC_scen2),
+         log_loem2 = log(LOEM_scen2),
+         log_efdc3 = log(EFDC_scen3),
+         log_loem3 = log(LOEM_scen3)) %>%
+  mutate(log_res_fvcom1 = log_fvcom1 - log_TP,
+         log_res_efdc1 = log_efdc1 - log_TP,
+         log_res_loem1 = log_loem1 - log_TP,
+         log_res_fvcom2 = log_fvcom2 - log_TP,
+         log_res_efdc2 = log_efdc2 - log_TP,
+         log_res_loem2 = log_loem2 - log_TP,
+         log_res_efdc3 = log_efdc3 - log_TP,
+         log_res_loem3 = log_loem3 - log_TP) %>% 
   dplyr::select(date_time, Longitude, Latitude, node_fvcom, sigma, node_EFDC, I_Index,
                 J_Index, K_Index, sample_depth, water_depth, depth_interval, log_TP,
                 log_res_fvcom1, log_res_efdc1, log_res_loem1, log_res_fvcom2, 
@@ -1003,7 +1012,7 @@ model_names <- c(
   "log_res_efdc3" = "EFDC-LOTMP Scenario 3",
   "log_res_loem3" = "LOEM Scenario 3")
 
-p5B <- ggplot(df.res2, aes(x = log_TP, y = log_residuals, color = depth_interval)) + 
+p5B <- ggplot(df.res, aes(x = log_TP, y = log_residuals, color = depth_interval)) + 
   geom_point() + theme_classic() + facet_wrap(~Model, scales = "free_x", labeller = labeller(Model = model_names)) + 
   geom_abline(intercept = 0, slope = 0, color = "black", linewidth = 0.75, linetype = "solid") +
   scale_color_manual(values = colorvar1) + scale_x_continuous(limits = c(0,5)) + scale_y_continuous(limits = c(-6,5)) +
@@ -1015,6 +1024,7 @@ p5B <- ggplot(df.res2, aes(x = log_TP, y = log_residuals, color = depth_interval
         title = element_text(size = 12, color = "black"),
         strip.text = element_text(size = 12, color = "black"),
         legend.position = "bottom")
+p5B
 #grayscale
 p5B.grey <- p5B + scale_color_grey()
 p5B.grey 

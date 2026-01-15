@@ -15,7 +15,7 @@ library(tidyr)
 library(dplyr)
 
 # functions
-source("../../scripts/skillstat_FUN.R")
+source("../../scripts/analysis/skillstat_FUN.R")
 
 ################################################################################
 #                         EFDC-TP vs FVCOM-TP vs LOEM
